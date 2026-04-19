@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ZipBaby — AI HR Leave System</title>
+<style>
+:root{--navy:#1E3A5F;--orange:#E8641A;--cream:#FEF9F0;--lgray:#F4F4F4;--dgray:#5A5A5A;--gold:#F0A500;--green:#1A7A4A;--red:#C0392B;--blue:#2471A3;--purple:#6C3483;--white:#FFFFFF;--shadow:0 4px 20px rgba(30,58,95,.12);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#EEF2F7;min-height:100vh;}
+
+/* ── LOGIN ── */
+.login-screen{min-height:100vh;background:linear-gradient(135deg,var(--navy) 0%,#2a4f7c 60%,#1a3050 100%);display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:#fff;border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.35);padding:48px 40px;width:100%;max-width:440px;}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo .emoji{font-size:48px;}
+.login-logo h1{font-size:22px;font-weight:800;color:var(--navy);margin-top:8px;}
+.login-logo p{font-size:12px;color:var(--dgray);margin-top:4px;}
+.login-tabs{display:flex;gap:0;border:1.5px solid #ddd;border-radius:10px;overflow:hidden;margin-bottom:28px;}
+.login-tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;background:#f9f9f9;color:var(--dgray);transition:all .2s;}
+.login-tab.active{background:var(--navy);color:#fff;}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+label{font-size:12px;font-weight:600;color:var(--navy);}
+input,select{border:1.5px solid #ddd;border-radius:8px;padding:11px 14px;font-size:14px;color:var(--navy);outline:none;width:100%;transition:border-color .2s;}
+input:focus,select:focus{border-color:var(--orange);}
+.login-btn{background:var(--orange);color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-top:6px;transition:background .2s;}
+.login-btn:hover{background:#c8530f;}
+.login-hint{font-size:11px;color:#aaa;text-align:center;margin-top:12px;}
+.login-err{background:#FDEDEC;color:var(--red);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:600;margin-bottom:12px;display:none;}
+
+/* ── APP BAR ── */
+.app-bar{background:var(--navy);padding:12px 24px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.25);}
+.app-bar .logo{font-size:26px;}
+.app-bar h1{color:#fff;font-size:17px;font-weight:700;}
+.app-bar p{color:var(--gold);font-size:11px;margin-top:2px;}
+.app-bar .badge{margin-left:auto;background:var(--orange);color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;}
+.logout-btn{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;margin-left:8px;}
+.logout-btn:hover{background:rgba(255,255,255,.22);}
+.notif-btn{position:relative;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);padding:6px 12px;border-radius:8px;font-size:16px;cursor:pointer;margin-left:8px;}
+.notif-dot{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+
+/* ── TABS ── */
+.tabs{display:flex;background:var(--navy);padding:0 20px;gap:2px;overflow-x:auto;}
+.tab{padding:11px 20px;color:rgba(255,255,255,.6);font-size:13px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s;}
+.tab:hover{color:rgba(255,255,255,.9);}
+.tab.active{color:#fff;border-bottom-color:var(--orange);}
+.tab-count{background:var(--orange);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:5px;}
+
+/* ── CONTENT ── */
+.content{padding:24px;max-width:1200px;margin:0 auto;}
+.pane{display:none;}.pane.active{display:block;}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:12px;box-shadow:var(--shadow);padding:24px;margin-bottom:20px;}
+.card-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+/* ── BALANCE STRIP ── */
+.balance-strip{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.bal-card{background:var(--lgray);border-radius:10px;padding:14px 18px;flex:1;min-width:120px;}
+.bal-card .type{font-size:11px;color:var(--dgray);font-weight:600;}
+.bal-card .num{font-size:26px;font-weight:700;color:var(--navy);}
+.bal-card .used{font-size:10px;color:#aaa;}
+.bal-card.low .num{color:var(--orange);}
+.bal-card.empty .num{color:var(--red);}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-group2{display:flex;flex-direction:column;gap:6px;}
+.form-group2.full{grid-column:1/-1;}
+label.lbl{font-size:12px;font-weight:600;color:var(--navy);}
+.submit-btn{background:var(--orange);color:#fff;border:none;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:8px;transition:background .2s;}
+.submit-btn:hover{background:#c8530f;}
+
+/* ── REQUEST STATUS CARDS (employee view) ── */
+.req-card{border-radius:12px;border:2px solid #eee;padding:18px;margin-bottom:14px;position:relative;background:#fff;}
+.req-card.approved{border-color:var(--green);}
+.req-card.rejected{border-color:var(--red);}
+.req-card.pending{border-color:var(--orange);}
+.req-card.auto{border-color:var(--blue);}
+.status-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;}
+.status-pill.approved{background:#E8F5E9;color:var(--green);}
+.status-pill.rejected{background:#FDEDEC;color:var(--red);}
+.status-pill.pending{background:#FFF3E0;color:var(--orange);}
+.status-pill.auto{background:#D6E8F7;color:var(--blue);}
+.view-exception-btn{background:var(--orange);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;margin-top:10px;}
+
+/* ── NOTIFICATIONS ── */
+.notif-item{border-radius:10px;padding:14px 16px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start;}
+.notif-item.approved{background:#E8F5E9;border-left:4px solid var(--green);}
+.notif-item.rejected{background:#FDEDEC;border-left:4px solid var(--red);}
+.notif-item.pending{background:#FFF3E0;border-left:4px solid var(--orange);}
+.notif-item.info{background:#D6E8F7;border-left:4px solid var(--blue);}
+.notif-icon{font-size:22px;flex-shrink:0;}
+.notif-body .notif-title{font-size:13px;font-weight:700;color:var(--navy);}
+.notif-body .notif-msg{font-size:12px;color:var(--dgray);margin-top:3px;line-height:1.5;}
+.notif-body .notif-time{font-size:10px;color:#aaa;margin-top:5px;}
+.notif-unread{width:8px;height:8px;background:var(--red);border-radius:50%;flex-shrink:0;margin-top:4px;}
+
+/* ── EXCEPTION MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(30,58,95,.8);display:flex;align-items:center;justify-content:center;z-index:2000;padding:20px;}
+.modal-box{background:#fff;border-radius:16px;max-width:560px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;}
+.modal-header{background:var(--orange);padding:20px 24px;color:#fff;}
+.modal-header h2{font-size:17px;font-weight:700;}
+.modal-header p{font-size:12px;opacity:.85;margin-top:4px;}
+.modal-body{padding:24px;}
+.modal-close{float:right;background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:13px;}
+.cp-step{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f0f0f0;align-items:flex-start;}
+.cp-step:last-child{border-bottom:none;}
+.cp-num{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;}
+.cp-active{background:var(--orange);color:#fff;}
+.cp-waiting{background:#f0f0f0;color:#aaa;}
+.cp-done{background:var(--green);color:#fff;}
+.timeline-bar{height:6px;background:#f0f0f0;border-radius:3px;margin:14px 0;}
+.timeline-fill{height:100%;border-radius:3px;background:var(--orange);}
+
+/* ── AI OVERLAY ── */
+.ai-overlay{position:fixed;inset:0;background:rgba(30,58,95,.85);display:flex;align-items:center;justify-content:center;z-index:1000;}
+.ai-box{background:#fff;border-radius:16px;padding:32px;max-width:520px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.ai-box h2{font-size:18px;color:var(--navy);margin-bottom:4px;}
+.ai-box p{font-size:12px;color:var(--dgray);margin-bottom:20px;}
+.ai-step{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--lgray);opacity:.3;transition:opacity .4s;}
+.ai-step.done{opacity:1;}.ai-step.active{opacity:1;}
+.ai-step .step-icon{width:36px;height:36px;border-radius:50%;background:var(--lgray);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ai-step.done .step-icon{background:#E8F5E9;}
+.ai-step.active .step-icon{background:#FFF3E0;animation:pulse 1s infinite;}
+.ai-step .step-text{font-size:13px;color:var(--navy);}
+.ai-step .step-check{margin-left:auto;font-size:16px;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+.ai-result{margin-top:16px;padding:14px;border-radius:10px;font-size:13px;font-weight:600;text-align:center;}
+.ai-result.routine{background:#E8F5E9;color:var(--green);}
+.ai-result.exception{background:#FFF3E0;color:var(--orange);}
+.ai-result.escalate{background:#FDEDEC;color:var(--red);}
+
+/* ── HR REVIEW PANEL ── */
+.review-card{border:2px solid #eee;border-radius:12px;padding:20px;margin-bottom:16px;position:relative;}
+.review-card.exception{border-color:var(--orange);}
+.review-card.escalate{border-color:var(--red);}
+.review-card.approved{border-color:var(--green);opacity:.8;}
+.review-card.rejected{border-color:var(--red);opacity:.8;}
+.rc-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.rc-eid{background:var(--navy);color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;}
+.rc-name{font-weight:700;color:var(--navy);font-size:15px;}
+.rc-role{font-size:11px;color:var(--dgray);}
+.rc-type{margin-left:auto;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;}
+.flag-list{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;}
+.flag{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;}
+.flag.warn{background:#FFF3E0;color:var(--orange);}
+.flag.danger{background:#FDEDEC;color:var(--red);}
+.flag.info{background:#D6E8F7;color:var(--blue);}
+.ai-draft{background:var(--lgray);border-radius:8px;padding:14px;font-size:12px;color:var(--dgray);margin:10px 0;line-height:1.7;border-left:3px solid var(--blue);}
+.ai-draft strong{color:var(--navy);}
+.cp-tag{display:inline-flex;align-items:center;gap:4px;background:var(--orange);color:#fff;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;margin:2px;}
+.cp-tag.red{background:var(--red);}
+.cp-tag.blue{background:var(--blue);}
+.action-bar{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.btn-approve{background:var(--green);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;}
+.btn-reject{background:var(--red);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;}
+.btn-approve:hover,.btn-reject:hover{opacity:.85;}
+.btn-modify{background:#fff;color:var(--navy);border:1.5px solid var(--navy);padding:9px 20px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;}
+.hr-note-input{width:100%;border:1.5px solid #ddd;border-radius:6px;padding:8px 12px;font-size:12px;margin-top:8px;color:var(--navy);}
+.status-chip{position:absolute;top:16px;right:16px;padding:4px 12px;border-radius:20px;font-size:10px;font-weight:700;}
+.status-chip.approved{background:#E8F5E9;color:var(--green);}
+.status-chip.rejected{background:#FDEDEC;color:var(--red);}
+.status-chip.pending{background:#FFF3E0;color:var(--orange);}
+.status-chip.auto{background:#D6E8F7;color:var(--blue);}
+
+/* ── LEDGER & AUDIT ── */
+.ledger-table,.audit-table{width:100%;border-collapse:collapse;font-size:13px;}
+.ledger-table th,.audit-table th{background:var(--navy);color:#fff;padding:10px 14px;text-align:left;font-size:12px;}
+.ledger-table td,.audit-table td{padding:10px 14px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+.ledger-table tr:nth-child(even) td,.audit-table tr:nth-child(even) td{background:var(--lgray);}
+.leave-bar{display:flex;gap:8px;flex-wrap:wrap;}
+.lb{text-align:center;min-width:60px;}
+.lb .l-val{font-size:15px;font-weight:700;}
+.lb .l-avail{font-size:10px;color:#aaa;}
+.lb.ok .l-val{color:var(--green);}.lb.warn .l-val{color:var(--orange);}.lb.empty .l-val{color:var(--red);}
+.eid-chip{background:var(--navy);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.dept-chip{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.audit-actor{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.audit-actor.ai{background:#D6E8F7;color:var(--blue);}
+.audit-actor.hr{background:#FFF3E0;color:var(--orange);}
+.audit-actor.sys{background:#F0E6FF;color:var(--purple);}
+.audit-decision{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.audit-decision.approved{background:#E8F5E9;color:var(--green);}
+.audit-decision.rejected{background:#FDEDEC;color:var(--red);}
+.audit-decision.pending{background:#FFF3E0;color:var(--orange);}
+.audit-decision.auto{background:#D6E8F7;color:var(--blue);}
+.audit-decision.flagged{background:#FDEDEC;color:var(--red);}
+
+/* ── WORKFLOW MAP ── */
+.flow-row{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;margin:6px 0;}
+.flow-node{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.node-box{padding:10px 18px;border-radius:8px;text-align:center;font-size:12px;font-weight:600;min-width:150px;max-width:180px;}
+.node-box.ai{background:#D6E8F7;color:var(--blue);border:2px solid var(--blue);}
+.node-box.human{background:#FFF3E0;color:var(--orange);border:2px solid var(--orange);}
+.node-box.auto{background:#E8F5E9;color:var(--green);border:2px solid var(--green);}
+.node-box.escalate{background:#FDEDEC;color:var(--red);border:2px solid var(--red);}
+.node-box.decision{background:var(--navy);color:#fff;border:2px solid var(--navy);clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);padding:24px 20px;min-width:130px;}
+.arrow{font-size:22px;color:#aaa;padding:0 6px;}
+.arrow-down{font-size:18px;color:#aaa;text-align:center;margin:4px 0;}
+.cp-badge-flow{background:var(--orange);color:#fff;border-radius:12px;padding:2px 10px;font-size:10px;font-weight:700;margin-top:4px;display:inline-block;}
+.flow-section{display:flex;gap:20px;margin:10px 0;align-items:flex-start;}
+.flow-branch{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.branch-header{font-size:12px;font-weight:700;padding:6px 16px;border-radius:20px;margin-bottom:6px;}
+
+/* ── MISC ── */
+.stat-row{display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+.stat-box{flex:1;min-width:130px;background:#fff;border-radius:10px;padding:16px;box-shadow:var(--shadow);text-align:center;}
+.stat-box .num{font-size:28px;font-weight:700;}
+.stat-box .lbl{font-size:11px;color:var(--dgray);margin-top:4px;}
+.stat-box.orange .num{color:var(--orange);}.stat-box.green .num{color:var(--green);}.stat-box.red .num{color:var(--red);}.stat-box.blue .num{color:var(--blue);}
+.empty-state{text-align:center;padding:40px;color:#aaa;font-size:14px;}
+.section-sub{font-size:12px;color:var(--dgray);margin-bottom:16px;}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dgray);}
+.legend-dot{width:14px;height:14px;border-radius:3px;}
+.export-btn{background:var(--navy);color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:12px;cursor:pointer;float:right;}
+.node-label{font-size:10px;color:var(--dgray);text-align:center;max-width:160px;}
+.hr-badge{background:var(--purple);color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;}
+@media(max-width:700px){.form-grid{grid-template-columns:1fr;}.flow-section{flex-direction:column;}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SCREEN: LOGIN                                          -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div id="screen-login" class="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="emoji">🍼</div>
+      <h1>ZipBaby HR Portal</h1>
+      <p>AI-Powered Leave Management · Gurgaon</p>
+    </div>
+
+    <div class="login-tabs">
+      <div class="login-tab active" id="ltab-emp" onclick="switchLoginTab('emp')">👤 Employee Login</div>
+      <div class="login-tab" id="ltab-hr" onclick="switchLoginTab('hr')">🔐 HR / Manager</div>
+    </div>
+
+    <!-- Employee Login -->
+    <div id="login-emp-form">
+      <div class="login-err" id="emp-err">Invalid EID or password. Please try again.</div>
+      <div class="form-group">
+        <label>Employee ID (EID)</label>
+        <select id="emp-eid">
+          <option value="">— Select your EID —</option>
+          <option value="ZB-001">ZB-001 — Arjun Mehta (CEO / Co-Founder)</option>
+          <option value="ZB-002">ZB-002 — Priya Sharma (Head of Operations)</option>
+          <option value="ZB-003">ZB-003 — Rohan Kapoor (Lead Software Engineer)</option>
+          <option value="ZB-004">ZB-004 — Sneha Gupta (Product Manager)</option>
+          <option value="ZB-005">ZB-005 — Karan Verma (Growth & Marketing Manager)</option>
+          <option value="ZB-006">ZB-006 — Anjali Singh (Supply Chain & Inv Manager)</option>
+          <option value="ZB-007">ZB-007 — Vikram Nair (Customer Experience Lead)</option>
+          <option value="ZB-008">ZB-008 — Deepa Pillai (Dark Store Executive)</option>
+          <option value="ZB-009">ZB-009 — Mohit Joshi (Delivery Fleet Lead)</option>
+          <option value="ZB-010">ZB-010 — Ritu Agarwal (HR & Admin Manager)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="emp-pwd" placeholder="Enter password" onkeydown="if(event.key==='Enter')loginEmployee()"/>
+      </div>
+      <button class="login-btn" onclick="loginEmployee()">Login →</button>
+      <p class="login-hint">Default password: 1234</p>
+    </div>
+
+    <!-- HR Login -->
+    <div id="login-hr-form" style="display:none;">
+      <div class="login-err" id="hr-err">Invalid credentials. HR access only.</div>
+      <div class="form-group">
+        <label>HR Access ID</label>
+        <input type="text" id="hr-uid" placeholder="Enter HR Access ID" onkeydown="if(event.key==='Enter')loginHR()"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="hr-pwd" placeholder="Enter password" onkeydown="if(event.key==='Enter')loginHR()"/>
+      </div>
+      <button class="login-btn" onclick="loginHR()" style="background:var(--purple);">Login as HR →</button>
+      <p class="login-hint">HR Access ID: HR_ACCESS · Password: 1234</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SCREEN: EMPLOYEE PORTAL                               -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div id="screen-employee" style="display:none;">
+  <div class="app-bar">
+    <div class="logo">🍼</div>
+    <div>
+      <h1 id="emp-bar-name">Employee Portal</h1>
+      <p id="emp-bar-role">ZipBaby Private Limited</p>
+    </div>
+    <button class="notif-btn" onclick="switchEmpTab('notif')" id="notifBtn" title="Notifications">
+      🔔
+      <span class="notif-dot" id="notifDot" style="display:none;">0</span>
+    </button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchEmpTab('balance')">📊 My Leave Balance</div>
+    <div class="tab" onclick="switchEmpTab('submit')">📝 Submit Request</div>
+    <div class="tab" onclick="switchEmpTab('myrequests')">📋 My Requests</div>
+    <div class="tab" onclick="switchEmpTab('notif')">🔔 Notifications <span class="tab-count" id="empNotifCount" style="display:none;">0</span></div>
+  </div>
+
+  <div class="content">
+
+    <!-- Balance Pane -->
+    <div class="pane active" id="emp-pane-balance">
+      <div class="card">
+        <div class="card-title">📊 Your Leave Balance — FY 2025-26</div>
+        <div id="emp-balance-strip" class="balance-strip"></div>
+        <div style="font-size:12px;color:var(--dgray);margin-top:8px;">
+          ℹ️ EL = Earned Leave · CL = Casual Leave · SL = Sick Leave · PH = Public Holidays (10 per year)
+        </div>
+      </div>
+      <div class="card" id="emp-history-card">
+        <div class="card-title">📅 Your Leave History</div>
+        <div id="emp-history-list"></div>
+      </div>
+    </div>
+
+    <!-- Submit Request Pane -->
+    <div class="pane" id="emp-pane-submit">
+      <div class="card">
+        <div class="card-title">📝 Submit a Leave Request</div>
+        <p class="section-sub">Your request will be processed by our AI engine and routed appropriately.</p>
+        <form onsubmit="empSubmitRequest(event)">
+          <div class="form-grid">
+            <div class="form-group2">
+              <label class="lbl">Leave Type</label>
+              <select id="emp-leaveType">
+                <option value="CL">CL — Casual Leave</option>
+                <option value="EL">EL — Earned Leave</option>
+                <option value="SL">SL — Sick Leave</option>
+              </select>
+            </div>
+            <div class="form-group2">
+              <label class="lbl">Is this Urgent?</label>
+              <select id="emp-isUrgent">
+                <option value="no">No — Planned leave</option>
+                <option value="yes">Yes — Urgent situation</option>
+              </select>
+            </div>
+            <div class="form-group2">
+              <label class="lbl">From Date</label>
+              <input type="date" id="emp-fromDate"/>
+            </div>
+            <div class="form-group2">
+              <label class="lbl">To Date</label>
+              <input type="date" id="emp-toDate"/>
+            </div>
+            <div class="form-group2">
+              <label class="lbl">Is this Backdated?</label>
+              <select id="emp-isBackdated">
+                <option value="no">No — Future dates</option>
+                <option value="yes">Yes — Past dates</option>
+              </select>
+            </div>
+            <div class="form-group2">
+              <label class="lbl">AI Balance Preview</label>
+              <div id="emp-preview-inline" style="font-size:13px;color:var(--dgray);padding:10px 0;">Select leave type to see balance</div>
+            </div>
+            <div class="form-group2 full">
+              <label class="lbl">Reason for Leave</label>
+              <input type="text" id="emp-reason" placeholder="Brief reason (visible to HR Manager)" style="width:100%;"/>
+            </div>
+          </div>
+          <button type="submit" class="submit-btn">Submit for AI Processing →</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- My Requests Pane -->
+    <div class="pane" id="emp-pane-myrequests">
+      <div class="card">
+        <div class="card-title">📋 My Leave Requests</div>
+        <div id="emp-requests-list"></div>
+      </div>
+    </div>
+
+    <!-- Notifications Pane -->
+    <div class="pane" id="emp-pane-notif">
+      <div class="card">
+        <div class="card-title">🔔 Notifications</div>
+        <div id="emp-notif-list"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /screen-employee -->
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SCREEN: HR PORTAL                                     -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div id="screen-hr" style="display:none;">
+  <div class="app-bar">
+    <div class="logo">🍼</div>
+    <div>
+      <h1>ZipBaby AI HR — Leave Workflow Engine</h1>
+      <p>Human-in-the-Loop Decision Checkpoint System · HR Manager View</p>
+    </div>
+    <span class="hr-badge">HR ACCESS</span>
+    <div class="badge" style="margin-left:8px;">v2.0</div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchHRTab('workflow')">🗺️ Workflow Map</div>
+    <div class="tab" onclick="switchHRTab('request')">📝 Simulate Request</div>
+    <div class="tab" onclick="switchHRTab('review')" id="reviewTab">🚦 HR Review <span class="tab-count" id="reviewCount">0</span></div>
+    <div class="tab" onclick="switchHRTab('ledger')">📊 Leave Ledger</div>
+    <div class="tab" onclick="switchHRTab('audit')">🔍 Audit Log <span class="tab-count" id="auditCount" style="background:var(--blue)">0</span></div>
+  </div>
+
+  <div class="content">
+
+    <!-- WORKFLOW MAP -->
+    <div class="pane active" id="pane-workflow">
+      <div class="card">
+        <div class="card-title">🗺️ AI Leave Workflow — Human-in-the-Loop Decision Map</div>
+        <p class="section-sub">Every step of the leave process — what AI handles and where humans must decide.</p>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#D6E8F7;border:2px solid #2471A3;"></div> AI Action</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#FFF3E0;border:2px solid #E8641A;"></div> Human Checkpoint</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#E8F5E9;border:2px solid #1A7A4A;"></div> Auto-Approved</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#FDEDEC;border:2px solid #C0392B;"></div> Escalated</div>
+        </div>
+        <div style="overflow-x:auto;"><div style="min-width:700px;">
+          <div class="flow-row"><div class="flow-node"><div class="node-box" style="background:#F0E6FF;border-color:#6C3483;color:#6C3483;">👤 Employee Submits Leave Request</div><div class="node-label">Via Employee Portal or Simulation</div></div></div>
+          <div class="arrow-down">↓</div>
+          <div class="flow-row" style="gap:8px;">
+            <div class="flow-node"><div class="node-box ai">📥 Capture & Categorize</div></div>
+            <div class="arrow">→</div>
+            <div class="flow-node"><div class="node-box ai">📋 Policy Check</div></div>
+            <div class="arrow">→</div>
+            <div class="flow-node"><div class="node-box ai">🔢 Balance Verify</div></div>
+            <div class="arrow">→</div>
+            <div class="flow-node"><div class="node-box ai">🔍 Pattern Scan</div></div>
+            <div class="arrow">→</div>
+            <div class="flow-node"><div class="node-box ai">⚖️ Risk Score</div></div>
+          </div>
+          <div class="arrow-down">↓</div>
+          <div class="flow-row"><div class="flow-node"><div class="node-box decision">DECISION<br/>GATE</div><div class="node-label" style="margin-top:8px;">AI routes to correct path</div></div></div>
+          <div class="arrow-down">↓</div>
+          <div class="flow-section">
+            <div class="flow-branch">
+              <div class="branch-header" style="background:#E8F5E9;color:var(--green);">✅ ROUTINE</div>
+              <div class="node-box auto">AI Auto-Approves</div>
+              <div class="arrow-down">↓</div>
+              <div class="node-box auto">📧 Employee Notified</div>
+              <div class="arrow-down">↓</div>
+              <div class="node-box auto">📒 Ledger Updated</div>
+            </div>
+            <div class="flow-branch">
+              <div class="branch-header" style="background:#FFF3E0;color:var(--orange);">⚠️ EXCEPTION</div>
+              <div class="node-box human">🚦 CP-1 Policy Check</div>
+              <div class="arrow-down">↓</div>
+              <div class="node-box human">🚦 CP-2 HR Exception Review</div>
+              <div class="cp-badge-flow">HR Manager decides</div>
+              <div class="arrow-down">↓</div>
+              <div class="node-box auto">Decision + Notification</div>
+            </div>
+            <div class="flow-branch">
+              <div class="branch-header" style="background:#FDEDEC;color:var(--red);">🔴 ESCALATE</div>
+              <div class="node-box escalate">🚦 CP-3 Pattern Risk</div>
+              <div class="arrow-down">↓</div>
+              <div class="node-box escalate">🚦 CP-4 Manager Override</div>
+              <div class="arrow-down">↓</div>
+              <div class="node-box escalate">🚦 CP-5 Final Approval</div>
+              <div class="cp-badge-flow" style="background:var(--red);">CEO + HR joint decision</div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- Demo Scenarios -->
+      <div class="card">
+        <div class="card-title">🎮 Demo Scenarios — Click to Load</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;">
+          <button onclick="loadScenario('routine')" style="background:#E8F5E9;color:var(--green);border:none;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">✅ Routine Approval</button>
+          <button onclick="loadScenario('exception')" style="background:#FFF3E0;color:var(--orange);border:none;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">⚠️ Backdated Emergency</button>
+          <button onclick="loadScenario('pattern')" style="background:#FDEDEC;color:var(--red);border:none;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">🔴 Monday Pattern Risk</button>
+          <button onclick="loadScenario('balance')" style="background:#D6E8F7;color:var(--blue);border:none;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">🔵 Insufficient Balance</button>
+          <button onclick="loadScenario('critical')" style="background:#F0E6FF;color:var(--purple);border:none;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">🟣 Critical Team Member</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIMULATE REQUEST -->
+    <div class="pane" id="pane-request">
+      <div class="card">
+        <div class="card-title">📝 Simulate Leave Request (HR Demo Mode)</div>
+        <form onsubmit="submitRequest(event)">
+          <div class="form-grid">
+            <div class="form-group2 full">
+              <label class="lbl">Employee</label>
+              <select id="empSelect" onchange="showBalance()">
+                <option value="">— Select Employee —</option>
+              </select>
+            </div>
+            <div id="balancePreview" class="balance-strip" style="display:none;grid-column:1/-1;"></div>
+            <div class="form-group2"><label class="lbl">Leave Type</label><select id="leaveType"><option value="CL">CL — Casual</option><option value="EL">EL — Earned</option><option value="SL">SL — Sick</option></select></div>
+            <div class="form-group2"><label class="lbl">Urgent?</label><select id="isUrgent"><option value="no">No</option><option value="yes">Yes</option></select></div>
+            <div class="form-group2"><label class="lbl">From Date</label><input type="date" id="fromDate"/></div>
+            <div class="form-group2"><label class="lbl">To Date</label><input type="date" id="toDate"/></div>
+            <div class="form-group2"><label class="lbl">Backdated?</label><select id="isBackdated"><option value="no">No</option><option value="yes">Yes</option></select></div>
+            <div class="form-group2 full"><label class="lbl">Reason</label><input type="text" id="reason" placeholder="Reason for leave…"/></div>
+          </div>
+          <button type="submit" class="submit-btn">Process with AI Engine →</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- HR REVIEW -->
+    <div class="pane" id="pane-review">
+      <div class="stat-row" id="reviewStats"></div>
+      <div id="reviewQueue"></div>
+    </div>
+
+    <!-- LEAVE LEDGER -->
+    <div class="pane" id="pane-ledger">
+      <div class="card">
+        <div class="card-title">📊 Live Leave Ledger — All Employees</div>
+        <button class="export-btn" onclick="exportLedger()">⬇ Export CSV</button>
+        <div style="overflow-x:auto;">
+          <table class="ledger-table"><thead><tr>
+            <th>EID</th><th>Employee</th><th>Role</th><th>Dept</th>
+            <th>EL (used/total)</th><th>CL (used/total)</th><th>SL (used/total)</th><th>PH Taken</th><th>Total Days</th>
+          </tr></thead><tbody id="ledgerBody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT LOG -->
+    <div class="pane" id="pane-audit">
+      <div class="card">
+        <div class="card-title">🔍 Full Audit Trail</div>
+        <button class="export-btn" onclick="exportAudit()">⬇ Export CSV</button>
+        <div style="overflow-x:auto;margin-top:8px;">
+          <table class="audit-table"><thead><tr>
+            <th>Timestamp</th><th>Request ID</th><th>EID</th><th>Employee</th>
+            <th>Type</th><th>Days</th><th>AI Path</th><th>Checkpoints</th>
+            <th>Actor</th><th>Decision</th><th>Notes</th>
+          </tr></thead><tbody id="auditBody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /screen-hr -->
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- AI PROCESSING OVERLAY (shared)                        -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="ai-overlay" id="aiOverlay" style="display:none;">
+  <div class="ai-box">
+    <h2>🤖 AI Processing Leave Request</h2>
+    <p id="aiRequestLabel">Analyzing request…</p>
+    <div id="aiSteps"></div>
+    <div class="ai-result" id="aiResult" style="display:none;"></div>
+    <button class="submit-btn" id="aiDoneBtn" style="display:none;margin-top:16px;" onclick="closeAI()">View Decision →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- EXCEPTION STATUS MODAL (employee view)               -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="exceptionModal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeExceptionModal()">✕ Close</button>
+      <h2>⚠️ Your Request is Under HR Review</h2>
+      <p id="exModal-subtitle">Leave Request · Under Exception Process</p>
+    </div>
+    <div class="modal-body">
+      <div id="exModal-body"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════════════
+const EMPLOYEES = [
+  { eid:'ZB-001', name:'Arjun Mehta',   role:'CEO / Co-Founder',           dept:'Leadership',    critical:true,  leaves:{ EL:{total:15,used:2,pending:0}, CL:{total:6,used:1,pending:0}, SL:{total:7,used:0,pending:0}, PH:{taken:0} }, history:[] },
+  { eid:'ZB-002', name:'Priya Sharma',  role:'Head of Operations',         dept:'Operations',    critical:true,  leaves:{ EL:{total:15,used:3,pending:0}, CL:{total:6,used:2,pending:0}, SL:{total:7,used:1,pending:0}, PH:{taken:1} }, history:[] },
+  { eid:'ZB-003', name:'Rohan Kapoor',  role:'Lead Software Engineer',     dept:'Technology',    critical:true,  leaves:{ EL:{total:15,used:4,pending:0}, CL:{total:6,used:3,pending:0}, SL:{total:7,used:2,pending:0}, PH:{taken:2} }, history:[] },
+  { eid:'ZB-004', name:'Sneha Gupta',   role:'Product Manager',            dept:'Product',       critical:false, leaves:{ EL:{total:15,used:1,pending:0}, CL:{total:6,used:1,pending:0}, SL:{total:7,used:0,pending:0}, PH:{taken:1} }, history:[] },
+  { eid:'ZB-005', name:'Karan Verma',   role:'Growth & Marketing Manager', dept:'Marketing',     critical:false, leaves:{ EL:{total:15,used:2,pending:0}, CL:{total:6,used:2,pending:0}, SL:{total:7,used:1,pending:0}, PH:{taken:2} }, history:[] },
+  { eid:'ZB-006', name:'Anjali Singh',  role:'Supply Chain & Inv Manager', dept:'Supply Chain',  critical:false, leaves:{ EL:{total:15,used:3,pending:0}, CL:{total:6,used:2,pending:0}, SL:{total:7,used:3,pending:0}, PH:{taken:1} }, history:[] },
+  { eid:'ZB-007', name:'Vikram Nair',   role:'Customer Experience Lead',   dept:'Customer',      critical:false, leaves:{ EL:{total:15,used:5,pending:0}, CL:{total:6,used:6,pending:0}, SL:{total:7,used:2,pending:0}, PH:{taken:3} }, history:[] },
+  { eid:'ZB-008', name:'Deepa Pillai',  role:'Dark Store Executive',       dept:'Operations',    critical:false, leaves:{ EL:{total:15,used:2,pending:0}, CL:{total:6,used:4,pending:0}, SL:{total:7,used:1,pending:0}, PH:{taken:2} }, history:[
+    {type:'CL',date:'2025-03-03',day:'Monday'},{type:'CL',date:'2025-02-10',day:'Monday'},{type:'CL',date:'2025-01-13',day:'Monday'}
+  ]},
+  { eid:'ZB-009', name:'Mohit Joshi',   role:'Delivery Fleet Lead',        dept:'Logistics',     critical:false, leaves:{ EL:{total:15,used:1,pending:0}, CL:{total:6,used:2,pending:0}, SL:{total:7,used:0,pending:0}, PH:{taken:1} }, history:[] },
+  { eid:'ZB-010', name:'Ritu Agarwal',  role:'HR & Admin Manager',         dept:'People & Admin',critical:false, leaves:{ EL:{total:15,used:2,pending:0}, CL:{total:6,used:1,pending:0}, SL:{total:7,used:1,pending:0}, PH:{taken:2} }, history:[] },
+];
+
+let leaveRequests = [];
+let auditLog = [];
+let notifications = {};  // { 'ZB-001': [{...}], ... }
+let currentUser = null;  // { type:'employee'|'hr', eid?, name?, role? }
+let currentRequest = null;
+
+EMPLOYEES.forEach(e => { notifications[e.eid] = []; });
+
+// ═══════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════════
+const getEmp = eid => EMPLOYEES.find(e => e.eid === eid);
+const ts = () => new Date().toLocaleString('en-IN',{hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+const genId = () => 'LR-' + Date.now().toString().slice(-6);
+const daysBetween = (a,b) => Math.round((new Date(b)-new Date(a))/(1000*60*60*24));
+const getDayName = d => ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date(d).getDay()];
+const available = (emp,type) => emp.leaves[type].total - emp.leaves[type].used - emp.leaves[type].pending;
+
+// ═══════════════════════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════════════════════
+function switchLoginTab(tab) {
+  document.getElementById('ltab-emp').classList.toggle('active', tab==='emp');
+  document.getElementById('ltab-hr').classList.toggle('active', tab==='hr');
+  document.getElementById('login-emp-form').style.display = tab==='emp' ? 'block' : 'none';
+  document.getElementById('login-hr-form').style.display = tab==='hr' ? 'block' : 'none';
+}
+
+function loginEmployee() {
+  const eid = document.getElementById('emp-eid').value;
+  const pwd = document.getElementById('emp-pwd').value;
+  const err = document.getElementById('emp-err');
+  if (!eid || pwd !== '1234') { err.style.display='block'; return; }
+  err.style.display='none';
+  const emp = getEmp(eid);
+  currentUser = { type:'employee', eid, name:emp.name, role:emp.role };
+  showEmployeePortal();
+}
+
+function loginHR() {
+  const uid = document.getElementById('hr-uid').value.trim();
+  const pwd = document.getElementById('hr-pwd').value;
+  const err = document.getElementById('hr-err');
+  if (uid !== 'HR_ACCESS' || pwd !== '1234') { err.style.display='block'; return; }
+  err.style.display='none';
+  currentUser = { type:'hr', name:'HR Manager' };
+  showHRPortal();
+}
+
+function logout() {
+  currentUser = null;
+  document.getElementById('screen-employee').style.display='none';
+  document.getElementById('screen-hr').style.display='none';
+  document.getElementById('screen-login').style.display='flex';
+  document.getElementById('emp-pwd').value='';
+  document.getElementById('hr-pwd').value='';
+  document.getElementById('hr-uid').value='';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PORTAL ENTRY
+// ═══════════════════════════════════════════════════════════════════════
+function showEmployeePortal() {
+  document.getElementById('screen-login').style.display='none';
+  document.getElementById('screen-hr').style.display='none';
+  document.getElementById('screen-employee').style.display='block';
+  const emp = getEmp(currentUser.eid);
+  document.getElementById('emp-bar-name').textContent = emp.name + ' · ' + emp.eid;
+  document.getElementById('emp-bar-role').textContent = emp.role + ' · ' + emp.dept;
+  // Set default dates
+  const d = new Date(); d.setDate(d.getDate()+6);
+  document.getElementById('emp-fromDate').value = d.toISOString().split('T')[0];
+  document.getElementById('emp-toDate').value   = d.toISOString().split('T')[0];
+  switchEmpTab('balance');
+  renderEmpBalance();
+  renderEmpNotifications();
+}
+
+function showHRPortal() {
+  document.getElementById('screen-login').style.display='none';
+  document.getElementById('screen-employee').style.display='none';
+  document.getElementById('screen-hr').style.display='block';
+  initHRForm();
+  updateCounts();
+  switchHRTab('workflow');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// EMPLOYEE PORTAL TABS
+// ═══════════════════════════════════════════════════════════════════════
+function switchEmpTab(id) {
+  document.querySelectorAll('#screen-employee .pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#screen-employee .tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('emp-pane-'+id).classList.add('active');
+  const idx = {balance:0,submit:1,myrequests:2,notif:3}[id];
+  document.querySelectorAll('#screen-employee .tab')[idx].classList.add('active');
+  if (id==='myrequests') renderEmpRequests();
+  if (id==='notif') { renderEmpNotifications(); markNotifsRead(); }
+  if (id==='balance') renderEmpBalance();
+  if (id==='submit') updateEmpBalancePreview();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// EMPLOYEE BALANCE RENDER
+// ═══════════════════════════════════════════════════════════════════════
+function renderEmpBalance() {
+  if (!currentUser || currentUser.type!=='employee') return;
+  const emp = getEmp(currentUser.eid);
+  const strip = document.getElementById('emp-balance-strip');
+  ['EL','CL','SL'].forEach(type => {
+    const avail = available(emp, type);
+    const cls = avail===0 ? 'empty' : avail<=2 ? 'low' : '';
+    strip.innerHTML += `<div class="bal-card ${cls}"><div class="type">${type} Available</div><div class="num">${avail}</div><div class="used">Used: ${emp.leaves[type].used} of ${emp.leaves[type].total}</div></div>`;
+  });
+  strip.innerHTML += `<div class="bal-card"><div class="type">PH Taken</div><div class="num">${emp.leaves.PH.taken}</div><div class="used">of 10 public holidays</div></div>`;
+
+  // History
+  const histEl = document.getElementById('emp-history-list');
+  const myReqs = leaveRequests.filter(r => r.eid === currentUser.eid);
+  if (myReqs.length === 0) {
+    histEl.innerHTML = '<div class="empty-state">No leave taken yet this FY.</div>';
+  } else {
+    histEl.innerHTML = myReqs.map(r => {
+      const sc = statusConfig(r.status);
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0;">
+        <span class="eid-chip">${r.leaveType}</span>
+        <span style="font-size:13px;color:var(--navy);">${r.fromDate} → ${r.toDate} (${r.days} day${r.days>1?'s':''})</span>
+        <span class="status-pill ${sc.cls}">${sc.icon} ${sc.label}</span>
+        <span style="font-size:11px;color:#aaa;margin-left:auto;">${r.id}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+function updateEmpBalancePreview() {
+  if (!currentUser || currentUser.type!=='employee') return;
+  const emp = getEmp(currentUser.eid);
+  const type = document.getElementById('emp-leaveType')?.value || 'CL';
+  const avail = available(emp, type);
+  const prev = document.getElementById('emp-preview-inline');
+  if (prev) prev.innerHTML = `<strong style="color:${avail===0?'var(--red)':avail<=2?'var(--orange)':'var(--green)'};">${avail} days available</strong><br/><span style="font-size:11px;color:#aaa;">Used ${emp.leaves[type].used} of ${emp.leaves[type].total}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// EMPLOYEE SUBMIT
+// ═══════════════════════════════════════════════════════════════════════
+function empSubmitRequest(e) {
+  e.preventDefault();
+  const emp = getEmp(currentUser.eid);
+  const leaveType   = document.getElementById('emp-leaveType').value;
+  const fromDate    = document.getElementById('emp-fromDate').value;
+  const toDate      = document.getElementById('emp-toDate').value;
+  const reason      = document.getElementById('emp-reason').value || 'Personal';
+  const isUrgent    = document.getElementById('emp-isUrgent').value;
+  const isBackdated = document.getElementById('emp-isBackdated').value;
+  const days = Math.max(1, daysBetween(fromDate, toDate) + 1);
+
+  const req = {
+    id: genId(), eid: emp.eid, leaveType, fromDate, toDate, days, reason,
+    isUrgent, isBackdated, submittedAt: ts(),
+    empName: emp.name, empRole: emp.role, empDept: emp.dept,
+    status: 'processing', ai: null, hrNote: ''
+  };
+  runAI(req, 'employee');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// EMPLOYEE REQUESTS LIST
+// ═══════════════════════════════════════════════════════════════════════
+function renderEmpRequests() {
+  if (!currentUser || currentUser.type!=='employee') return;
+  const myReqs = leaveRequests.filter(r => r.eid === currentUser.eid);
+  const el = document.getElementById('emp-requests-list');
+  if (myReqs.length === 0) {
+    el.innerHTML = '<div class="empty-state">📭 No leave requests yet. Submit one from the Submit Request tab.</div>'; return;
+  }
+  el.innerHTML = myReqs.map(req => {
+    const sc = statusConfig(req.status);
+    const isPending = req.status === 'pending-review';
+    const analysis = req.ai || {};
+    const flags = (analysis.flags||[]).map(f=>`<span class="flag ${f.severity}">${f.label}</span>`).join('');
+    return `<div class="req-card ${sc.cls}">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <span class="status-pill ${sc.cls}">${sc.icon} ${sc.label}</span>
+        <span style="font-size:11px;color:#aaa;margin-left:auto;">${req.id} · ${req.submittedAt}</span>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:var(--navy);">${req.leaveType} Leave · ${req.days} day${req.days>1?'s':''}</div>
+      <div style="font-size:12px;color:var(--dgray);margin-top:4px;">📅 ${req.fromDate} → ${req.toDate}</div>
+      <div style="font-size:12px;color:var(--dgray);margin-top:4px;">📝 ${req.reason}</div>
+      ${flags ? `<div class="flag-list" style="margin-top:8px;">${flags}</div>` : ''}
+      ${req.hrNote ? `<div style="font-size:12px;background:#f9f9f9;border-radius:6px;padding:8px 12px;margin-top:8px;border-left:3px solid var(--blue);"><strong>HR Note:</strong> ${req.hrNote}</div>` : ''}
+      ${isPending ? `<button class="view-exception-btn" onclick="showExceptionModal('${req.id}')">View Exception Details →</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function statusConfig(status) {
+  return {
+    'approved-auto': { cls:'auto',     icon:'⚡', label:'Auto-Approved' },
+    'approved-hr':   { cls:'approved', icon:'✅', label:'HR Approved' },
+    'rejected-hr':   { cls:'rejected', icon:'❌', label:'Rejected' },
+    'pending-review':{ cls:'pending',  icon:'⏳', label:'Under HR Review' },
+    'processing':    { cls:'pending',  icon:'🔄', label:'Processing' },
+  }[status] || { cls:'pending', icon:'⏳', label:'Pending' };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// EXCEPTION MODAL (employee view)
+// ═══════════════════════════════════════════════════════════════════════
+function showExceptionModal(reqId) {
+  const req = leaveRequests.find(r => r.id === reqId);
+  if (!req) return;
+  const analysis = req.ai || {};
+  const cpLabels = {'CP-1':'Policy Ambiguity — Request may not clearly fit a policy rule','CP-2':'Exception Review — Backdated, urgent, or balance issue','CP-3':'Pattern Risk — Repeated absence pattern detected','CP-4':'Manager Override — Critical team or deadline clash','CP-5':'Final Approval — Requires CEO + HR joint decision'};
+  const activeCP = analysis.checkpoints || [];
+
+  document.getElementById('exModal-subtitle').textContent = `${req.id} · ${req.leaveType} Leave · ${req.days} day(s)`;
+
+  let body = `
+    <div style="background:#FFF3E0;border-radius:10px;padding:14px 16px;margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--orange);">⚠️ Your request is currently with the HR Manager</div>
+      <div style="font-size:12px;color:var(--dgray);margin-top:6px;">Our AI engine reviewed your request and flagged it for human review. This is normal — the HR Manager will make the final decision and notify you within 24 hours.</div>
+    </div>
+
+    <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">🚦 Exception Checkpoints Triggered</div>
+  `;
+
+  ['CP-1','CP-2','CP-3','CP-4','CP-5'].forEach((cp, i) => {
+    const isActive = activeCP.includes(cp);
+    const cls = isActive ? 'cp-active' : 'cp-waiting';
+    body += `<div class="cp-step">
+      <div class="cp-num ${cls}">${isActive ? '!' : i+1}</div>
+      <div>
+        <div style="font-size:13px;font-weight:${isActive?'700':'400'};color:${isActive?'var(--orange)':'#aaa'};">${cp}</div>
+        <div style="font-size:11px;color:${isActive?'var(--dgray)':'#ccc'};">${cpLabels[cp]}</div>
+      </div>
+      ${isActive ? '<span style="margin-left:auto;font-size:11px;background:#FFF3E0;color:var(--orange);padding:2px 8px;border-radius:8px;font-weight:600;">TRIGGERED</span>' : ''}
+    </div>`;
+  });
+
+  body += `
+    <div style="margin-top:20px;">
+      <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px;">🤖 AI Flags Raised</div>
+      <div class="flag-list">${(analysis.flags||[]).map(f=>`<span class="flag ${f.severity}">${f.label}</span>`).join('') || '<span style="color:#aaa;font-size:12px;">None</span>'}</div>
+    </div>
+    <div style="margin-top:16px;background:var(--lgray);border-radius:8px;padding:12px;font-size:12px;color:var(--dgray);">
+      <strong>What happens next?</strong><br/>
+      The HR Manager will review the AI analysis and your request details. You will receive a notification here once a decision is made. Typical resolution time: 4–24 hours.
+    </div>
+  `;
+
+  document.getElementById('exModal-body').innerHTML = body;
+  document.getElementById('exceptionModal').style.display='flex';
+}
+
+function closeExceptionModal() {
+  document.getElementById('exceptionModal').style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════════════
+function pushNotification(eid, type, title, msg) {
+  if (!notifications[eid]) notifications[eid] = [];
+  notifications[eid].unshift({ type, title, msg, time: ts(), read: false });
+  if (currentUser && currentUser.type==='employee' && currentUser.eid===eid) {
+    updateNotifBadge();
+  }
+}
+
+function markNotifsRead() {
+  if (!currentUser || currentUser.type!=='employee') return;
+  const n = notifications[currentUser.eid] || [];
+  n.forEach(x => x.read = true);
+  updateNotifBadge();
+}
+
+function updateNotifBadge() {
+  if (!currentUser || currentUser.type!=='employee') return;
+  const unread = (notifications[currentUser.eid]||[]).filter(n=>!n.read).length;
+  const dot = document.getElementById('notifDot');
+  const cnt = document.getElementById('empNotifCount');
+  if (unread > 0) {
+    dot.style.display='flex'; dot.textContent=unread;
+    cnt.style.display='inline'; cnt.textContent=unread;
+  } else {
+    dot.style.display='none'; cnt.style.display='none';
+  }
+}
+
+function renderEmpNotifications() {
+  if (!currentUser || currentUser.type!=='employee') return;
+  const n = notifications[currentUser.eid] || [];
+  const el = document.getElementById('emp-notif-list');
+  if (n.length === 0) {
+    el.innerHTML = '<div class="empty-state">🔕 No notifications yet. Submit a leave request to get started.</div>'; return;
+  }
+  el.innerHTML = n.map(notif => `
+    <div class="notif-item ${notif.type}">
+      <div class="notif-icon">${{approved:'✅',rejected:'❌',pending:'⏳',info:'ℹ️'}[notif.type]||'🔔'}</div>
+      <div class="notif-body">
+        <div class="notif-title">${notif.title}</div>
+        <div class="notif-msg">${notif.msg}</div>
+        <div class="notif-time">🕐 ${notif.time}</div>
+      </div>
+      ${!notif.read ? '<div class="notif-unread"></div>' : ''}
+    </div>
+  `).join('');
+  updateNotifBadge();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// AI ENGINE
+// ═══════════════════════════════════════════════════════════════════════
+function aiAnalyze(req) {
+  const emp = getEmp(req.eid);
+  const avail = available(emp, req.leaveType);
+  const today = new Date();
+  const from = new Date(req.fromDate);
+  const noticeDays = Math.round((from - today) / (1000*60*60*24));
+  let path = 'routine', flags = [], checkpoints = [];
+
+  if (avail < req.days) {
+    flags.push({ label:'INSUFFICIENT_BALANCE', severity:'danger', detail:`Only ${avail} ${req.leaveType} days available, ${req.days} requested.` });
+    path = 'exception'; checkpoints.push('CP-2');
+  }
+  if (req.isBackdated === 'yes') {
+    flags.push({ label:'BACKDATED', severity:'warn', detail:'Request is for past dates — requires HR verification.' });
+    if (path!=='escalate') path='exception'; checkpoints.push('CP-2');
+  }
+  if (req.isUrgent === 'yes') {
+    flags.push({ label:'URGENT', severity:'warn', detail:'Marked urgent — may need verbal confirmation.' });
+    if (path!=='escalate') path='exception'; checkpoints.push('CP-2');
+  }
+  if (noticeDays < 3 && req.isBackdated !== 'yes' && req.leaveType === 'EL') {
+    flags.push({ label:'SHORT_NOTICE', severity:'warn', detail:'EL requires 5 days notice for advance planning.' });
+    if (path!=='escalate') path='exception'; checkpoints.push('CP-1');
+  }
+  if (req.leaveType === 'CL' && req.days > 3) {
+    flags.push({ label:'CL_CONSECUTIVE_LIMIT', severity:'warn', detail:'CL maximum is 3 consecutive days. Beyond this requires policy clarification.' });
+    if (path!=='escalate') path='exception'; checkpoints.push('CP-1');
+  }
+  if (req.leaveType === 'SL' && req.days > 3) {
+    flags.push({ label:'MEDICAL_CERT_REQUIRED', severity:'info', detail:'SL > 3 days requires a medical certificate.' });
+    if (path!=='escalate') path='exception'; checkpoints.push('CP-2');
+  }
+  // Pattern risk
+  const dayName = getDayName(req.fromDate);
+  if (dayName === 'Monday') {
+    const recentMondays = (emp.history||[]).filter(h => {
+      const d = new Date(h.date); const diff = (today-d)/(1000*60*60*24);
+      return diff <= 90 && h.day === 'Monday';
+    });
+    if (recentMondays.length >= 2) {
+      flags.push({ label:'PATTERN_MONDAY', severity:'danger', detail:`This is the ${recentMondays.length+1}rd Monday absence in 90 days — potential pattern risk.` });
+      path = 'escalate'; checkpoints.push('CP-3');
+    }
+  }
+  if (emp.critical && req.days >= 5) {
+    flags.push({ label:'CRITICAL_TEAM', severity:'danger', detail:`${emp.name} is a critical team member. ${req.days}-day absence may impact operations.` });
+    path = 'escalate'; checkpoints.push('CP-4');
+  }
+  if (req.days >= 7) {
+    flags.push({ label:'LONG_LEAVE', severity:'warn', detail:'Leave of 7+ days requires final approval documentation.' });
+    if (path !== 'escalate') path = 'exception';
+    checkpoints.push('CP-5');
+  }
+
+  const uniqueCP = [...new Set(checkpoints)].sort();
+  const draftApprove = `Dear ${req.empName},\n\nYour ${req.leaveType} leave from ${req.fromDate} to ${req.toDate} (${req.days} day${req.days>1?'s':''}) has been APPROVED.\n\nEnsure proper handover. Updated balance: ${avail - req.days} ${req.leaveType} days remaining.\n\nWarm regards,\nZipBaby HR`;
+  const draftReview  = `Dear ${req.empName},\n\nYour ${req.leaveType} leave request is UNDER REVIEW.\n\nFlags: ${flags.map(f=>f.label).join(', ')}. HR Manager will respond within 24 hours.\n\nWarm regards,\nZipBaby HR`;
+  const draftEscalate= `Dear ${req.empName},\n\nYour request requires escalated review: ${flags.map(f=>f.label).join(', ')}. Forwarded to HR + Dept Head. Response within 48 hours.\n\nWarm regards,\nZipBaby HR`;
+
+  return {
+    path, flags, checkpoints: uniqueCP,
+    draft: path==='routine' ? draftApprove : path==='exception' ? draftReview : draftEscalate,
+    summary: path==='routine' ? `All conditions met. ${avail} days available.` : path==='exception' ? `${flags.length} flag(s). HR review required.` : `Escalation-level risk. Management decision required.`
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// AI PROCESSING ANIMATION
+// ═══════════════════════════════════════════════════════════════════════
+let aiContext = 'hr'; // 'hr' or 'employee'
+
+function runAI(req, context) {
+  aiContext = context || 'hr';
+  currentRequest = req;
+  document.getElementById('aiRequestLabel').textContent = `Analyzing: ${req.id} — ${req.empName} · ${req.days} day(s) ${req.leaveType}`;
+  document.getElementById('aiResult').style.display='none';
+  document.getElementById('aiDoneBtn').style.display='none';
+
+  const steps = [
+    {icon:'📥',text:'Capturing request and employee profile'},
+    {icon:'📋',text:'Matching against ZipBaby Leave Policy v1.0'},
+    {icon:'🔢',text:`Verifying ${req.leaveType} balance`},
+    {icon:'📅',text:'Validating dates, notice period, policy limits'},
+    {icon:'🔍',text:'Scanning 90-day leave history for patterns'},
+    {icon:'⚖️',text:'Generating risk score and flags'},
+    {icon:'✍️',text:'Drafting response letter'},
+    {icon:'🚦',text:'Routing: Routine / Exception / Escalate'},
+  ];
+  const stepsDiv = document.getElementById('aiSteps');
+  stepsDiv.innerHTML = steps.map((s,i) =>
+    `<div class="ai-step" id="aiStep${i}"><div class="step-icon">${s.icon}</div><div class="step-text">${s.text}</div><div class="step-check" id="aiCheck${i}"></div></div>`
+  ).join('');
+  document.getElementById('aiOverlay').style.display='flex';
+
+  let i = 0;
+  function next() {
+    if (i > 0) {
+      document.getElementById('aiStep'+(i-1)).classList.remove('active');
+      document.getElementById('aiStep'+(i-1)).classList.add('done');
+      document.getElementById('aiCheck'+(i-1)).textContent='✅';
+    }
+    if (i < steps.length) {
+      document.getElementById('aiStep'+i).classList.add('active'); i++;
+      setTimeout(next, 600 + Math.random()*300);
+    } else {
+      const analysis = aiAnalyze(req);
+      req.ai = analysis;
+      const labels = {routine:'✅ ROUTINE — Auto-Approve Recommended', exception:'⚠️ EXCEPTION — Human Review Required ('+analysis.checkpoints.join(', ')+')', escalate:'🔴 ESCALATED — Management Decision Required ('+analysis.checkpoints.join(', ')+')'};
+      const resultEl = document.getElementById('aiResult');
+      resultEl.className = 'ai-result '+analysis.path;
+      resultEl.innerHTML = `<div>${labels[analysis.path]}</div><div style="font-weight:400;font-size:12px;margin-top:6px;">${analysis.summary}</div>`;
+      resultEl.style.display='block';
+      document.getElementById('aiDoneBtn').style.display='block';
+    }
+  }
+  setTimeout(next, 200);
+}
+
+function closeAI() {
+  document.getElementById('aiOverlay').style.display='none';
+  const req = currentRequest;
+  const analysis = req.ai;
+
+  addAudit(req.id, req.eid, req.empName, req.leaveType, req.days, analysis.path,
+    analysis.checkpoints.join(',')||'None', 'AI Engine',
+    analysis.path==='routine' ? 'auto-approved' : 'pending', analysis.summary);
+
+  if (analysis.path === 'routine') {
+    req.status = 'approved-auto';
+    const emp = getEmp(req.eid);
+    emp.leaves[req.leaveType].used += req.days;
+    if (!emp.history) emp.history=[];
+    emp.history.push({type:req.leaveType, date:req.fromDate, day:getDayName(req.fromDate)});
+    // Push notification
+    pushNotification(req.eid, 'approved', '✅ Leave Auto-Approved',
+      `Your ${req.leaveType} leave from ${req.fromDate} to ${req.toDate} (${req.days} day${req.days>1?'s':''}) was automatically approved. No further action needed.`);
+  } else {
+    req.status = 'pending-review';
+    pushNotification(req.eid, 'pending', '⏳ Leave Request Under HR Review',
+      `Your ${req.leaveType} leave (${req.fromDate}→${req.toDate}) has been flagged for HR review. ${analysis.checkpoints.length} checkpoint(s) triggered: ${analysis.checkpoints.join(', ')}. You will be notified of the decision within 24 hours.`);
+  }
+
+  leaveRequests.unshift(req);
+  updateCounts();
+
+  if (aiContext === 'employee') {
+    switchEmpTab('myrequests');
+    updateNotifBadge();
+    // Reset form
+    document.getElementById('emp-reason').value='';
+  } else {
+    switchHRTab(analysis.path==='routine' ? 'ledger' : 'review');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// HR PORTAL TABS
+// ═══════════════════════════════════════════════════════════════════════
+function switchHRTab(id) {
+  document.querySelectorAll('#screen-hr .pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#screen-hr .tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('pane-'+id).classList.add('active');
+  const idx = {workflow:0,request:1,review:2,ledger:3,audit:4}[id];
+  document.querySelectorAll('#screen-hr .tab')[idx].classList.add('active');
+  if (id==='ledger')  renderLedger();
+  if (id==='audit')   renderAudit();
+  if (id==='review')  renderReview();
+}
+
+function initHRForm() {
+  const sel = document.getElementById('empSelect');
+  if (sel.options.length > 1) return;
+  EMPLOYEES.forEach(e => {
+    const o = document.createElement('option');
+    o.value = e.eid; o.textContent = `${e.eid} — ${e.name} (${e.role})`;
+    sel.appendChild(o);
+  });
+  const d = new Date(); d.setDate(d.getDate()+6);
+  document.getElementById('fromDate').value = d.toISOString().split('T')[0];
+  document.getElementById('toDate').value   = d.toISOString().split('T')[0];
+}
+
+function showBalance() {
+  const eid = document.getElementById('empSelect').value;
+  if (!eid) { document.getElementById('balancePreview').style.display='none'; return; }
+  const emp = getEmp(eid);
+  const strip = document.getElementById('balancePreview');
+  strip.innerHTML = ['EL','CL','SL'].map(t => {
+    const avail = available(emp,t);
+    const cls = avail===0?'empty':avail<=2?'low':'';
+    return `<div class="bal-card ${cls}"><div class="type">${t}</div><div class="num">${avail}</div><div class="used">Used ${emp.leaves[t].used}/${emp.leaves[t].total}</div></div>`;
+  }).join('')+`<div class="bal-card"><div class="type">PH</div><div class="num">${emp.leaves.PH.taken}</div><div class="used">of 10</div></div>`;
+  strip.style.display='flex';
+}
+
+function loadScenario(s) {
+  const today = new Date();
+  const fmt = d => d.toISOString().split('T')[0];
+  const future = n => { const d=new Date(today); d.setDate(d.getDate()+n); return fmt(d); };
+  const past   = n => { const d=new Date(today); d.setDate(d.getDate()-n); return fmt(d); };
+  let nm = new Date(today); while(nm.getDay()!==1) nm.setDate(nm.getDate()+1);
+  const scenarios = {
+    routine:   {eid:'ZB-005',leaveType:'CL',from:future(6),to:future(6),   reason:'Personal errand, planned in advance.',urgent:'no', backdated:'no'},
+    exception: {eid:'ZB-003',leaveType:'EL',from:past(3),  to:past(2),     reason:'Family emergency requiring immediate attention.',urgent:'yes',backdated:'yes'},
+    pattern:   {eid:'ZB-008',leaveType:'CL',from:fmt(nm),  to:fmt(nm),     reason:'Personal appointment.',urgent:'no',backdated:'no'},
+    balance:   {eid:'ZB-007',leaveType:'CL',from:future(7),to:future(9),   reason:'Travel plans.',urgent:'no',backdated:'no'},
+    critical:  {eid:'ZB-002',leaveType:'EL',from:future(7),to:future(11),  reason:'Family vacation.',urgent:'no',backdated:'no'},
+  };
+  const sc = scenarios[s];
+  document.getElementById('empSelect').value=sc.eid; showBalance();
+  document.getElementById('leaveType').value=sc.leaveType;
+  document.getElementById('fromDate').value=sc.from; document.getElementById('toDate').value=sc.to;
+  document.getElementById('reason').value=sc.reason;
+  document.getElementById('isUrgent').value=sc.urgent; document.getElementById('isBackdated').value=sc.backdated;
+  switchHRTab('request'); window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function submitRequest(e) {
+  e.preventDefault();
+  const eid=document.getElementById('empSelect').value;
+  if (!eid) { alert('Please select an employee.'); return; }
+  const leaveType=document.getElementById('leaveType').value;
+  const fromDate=document.getElementById('fromDate').value;
+  const toDate=document.getElementById('toDate').value;
+  const reason=document.getElementById('reason').value||'Not specified';
+  const isUrgent=document.getElementById('isUrgent').value;
+  const isBackdated=document.getElementById('isBackdated').value;
+  const days=Math.max(1,daysBetween(fromDate,toDate)+1);
+  const emp=getEmp(eid);
+  const req={id:genId(),eid,leaveType,fromDate,toDate,days,reason,isUrgent,isBackdated,submittedAt:ts(),empName:emp.name,empRole:emp.role,empDept:emp.dept,status:'processing',ai:null,hrNote:''};
+  runAI(req,'hr');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// HR REVIEW PANEL
+// ═══════════════════════════════════════════════════════════════════════
+function renderReview() {
+  const pending  = leaveRequests.filter(r=>r.status==='pending-review');
+  const resolved = leaveRequests.filter(r=>['approved-hr','rejected-hr','approved-auto'].includes(r.status));
+  const statsEl = document.getElementById('reviewStats');
+  statsEl.innerHTML = `
+    <div class="stat-box orange"><div class="num">${pending.length}</div><div class="lbl">Awaiting Review</div></div>
+    <div class="stat-box green"><div class="num">${leaveRequests.filter(r=>r.status==='approved-hr'||r.status==='approved-auto').length}</div><div class="lbl">Approved</div></div>
+    <div class="stat-box red"><div class="num">${leaveRequests.filter(r=>r.status==='rejected-hr').length}</div><div class="lbl">Rejected</div></div>
+    <div class="stat-box blue"><div class="num">${leaveRequests.length}</div><div class="lbl">Total</div></div>
+  `;
+  const qEl = document.getElementById('reviewQueue');
+  if (leaveRequests.length===0) { qEl.innerHTML='<div class="card"><div class="empty-state">📭 No requests yet. Use Simulate Request to create one.</div></div>'; return; }
+  qEl.innerHTML='';
+  if (pending.length>0) { qEl.innerHTML+='<div class="card-title" style="margin-bottom:12px;">🔴 Pending Human Review</div>'; pending.forEach(req=>qEl.appendChild(buildReviewCard(req))); }
+  if (resolved.length>0) { qEl.innerHTML+='<div class="card-title" style="margin:20px 0 12px;">✅ Resolved</div>'; resolved.forEach(req=>qEl.appendChild(buildReviewCard(req))); }
+}
+
+function buildReviewCard(req) {
+  const analysis=req.ai;
+  const isResolved=req.status!=='pending-review';
+  const cpColors={'CP-1':'','CP-2':'blue','CP-3':'red','CP-4':'red','CP-5':'red'};
+  const cpLabels={'CP-1':'Policy Ambiguity','CP-2':'Exception Review','CP-3':'Pattern Risk','CP-4':'Manager Override','CP-5':'Final Approval'};
+  const typeColors={EL:'#D6E8F7',CL:'#E8F5E9',SL:'#FFF3E0'};
+  const statusLabel={'approved-auto':'✅ AUTO-APPROVED','approved-hr':'✅ HR APPROVED','rejected-hr':'❌ REJECTED','pending-review':'⏳ PENDING'};
+  const statusCls={'approved-auto':'auto','approved-hr':'approved','rejected-hr':'rejected','pending-review':'pending'};
+  const div=document.createElement('div');
+  div.className=`review-card ${analysis.path} ${isResolved?req.status.replace('approved-hr','approved').replace('rejected-hr','rejected').replace('approved-auto','approved'):''}`;
+  div.id='rc-'+req.id;
+  const cpTags=(analysis.checkpoints||[]).map(cp=>`<span class="cp-tag ${cpColors[cp]||''}">${cp} — ${cpLabels[cp]}</span>`).join('');
+  const flagsHtml=(analysis.flags||[]).map(f=>`<span class="flag ${f.severity}">${f.label}</span>`).join('');
+  const draftFmt=(analysis.draft||'').replace(/\n/g,'<br/>');
+  div.innerHTML=`
+    <div class="status-chip ${statusCls[req.status]||'pending'}">${statusLabel[req.status]||'PENDING'}</div>
+    <div class="rc-header">
+      <span class="rc-eid">${req.eid}</span>
+      <div><div class="rc-name">${req.empName}</div><div class="rc-role">${req.empRole} · ${req.empDept}</div></div>
+      <span class="rc-type" style="background:${typeColors[req.leaveType]||'#eee'};color:var(--navy);">${req.leaveType} · ${req.days} day${req.days>1?'s':''}</span>
+    </div>
+    <div style="font-size:12px;color:var(--dgray);margin-bottom:10px;">📅 ${req.fromDate} → ${req.toDate} &nbsp;·&nbsp; 📋 ${req.id} &nbsp;·&nbsp; 🕐 ${req.submittedAt}</div>
+    <div style="font-size:12px;color:var(--navy);margin-bottom:8px;"><strong>Reason:</strong> ${req.reason}</div>
+    ${cpTags?`<div style="margin-bottom:8px;">${cpTags}</div>`:''}
+    ${flagsHtml?`<div class="flag-list">${flagsHtml}</div>`:''}
+    ${(analysis.flags||[]).map(f=>`<div style="font-size:11px;color:var(--dgray);margin:3px 0;">• ${f.detail}</div>`).join('')}
+    <div class="ai-draft"><strong>🤖 AI Draft Response:</strong><br/>${draftFmt}</div>
+    ${!isResolved?`
+      <textarea class="hr-note-input" id="note-${req.id}" placeholder="HR Manager notes (captured in audit log)…" rows="2"></textarea>
+      <div class="action-bar">
+        <button class="btn-approve" onclick="hrDecide('${req.id}','approve')">✅ Approve</button>
+        <button class="btn-reject"  onclick="hrDecide('${req.id}','reject')">❌ Reject</button>
+        <button class="btn-modify"  onclick="hrDecide('${req.id}','modify')">✏️ Approve with Modification</button>
+      </div>`:`<div style="font-size:12px;color:var(--dgray);margin-top:10px;">${req.hrNote?'📝 HR Note: '+req.hrNote:''}</div>`}
+  `;
+  return div;
+}
+
+function hrDecide(id, decision) {
+  const req = leaveRequests.find(r=>r.id===id);
+  if (!req) return;
+  const note = document.getElementById('note-'+id)?.value||'';
+  req.hrNote = note;
+
+  if (decision==='approve'||decision==='modify') {
+    req.status='approved-hr';
+    const emp=getEmp(req.eid);
+    emp.leaves[req.leaveType].used+=req.days;
+    if(!emp.history)emp.history=[];
+    emp.history.push({type:req.leaveType,date:req.fromDate,day:getDayName(req.fromDate)});
+    addAudit(req.id,req.eid,req.empName,req.leaveType,req.days,req.ai.path,req.ai.checkpoints.join(',')||'None','HR Manager','approved',note||'Approved after HR review');
+    // Notify employee
+    pushNotification(req.eid, 'approved', '✅ Leave Request Approved by HR',
+      `Your ${req.leaveType} leave from ${req.fromDate} to ${req.toDate} (${req.days} day${req.days>1?'s':''}) has been approved by the HR Manager.${note?' Note: '+note:' Enjoy your leave!'}`);
+  } else {
+    req.status='rejected-hr';
+    addAudit(req.id,req.eid,req.empName,req.leaveType,req.days,req.ai.path,req.ai.checkpoints.join(',')||'None','HR Manager','rejected',note||'Rejected after review');
+    // Notify employee
+    pushNotification(req.eid, 'rejected', '❌ Leave Request Rejected',
+      `Your ${req.leaveType} leave from ${req.fromDate} to ${req.toDate} (${req.days} day${req.days>1?'s':''}) was not approved.${note?' Reason: '+note:' Please speak to the HR Manager for details.'}`);
+  }
+  updateCounts();
+  renderReview();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// LEDGER & AUDIT
+// ═══════════════════════════════════════════════════════════════════════
+function renderLedger() {
+  const deptColors={'Leadership':'#1E3A5F','Operations':'#E8641A','Technology':'#2471A3','Product':'#6C3483','Marketing':'#1A7A4A','Supply Chain':'#F0A500','Customer':'#C0392B','Logistics':'#2471A3','People & Admin':'#1A7A4A'};
+  document.getElementById('ledgerBody').innerHTML=EMPLOYEES.map(emp=>{
+    const avail=t=>emp.leaves[t].total-emp.leaves[t].used-emp.leaves[t].pending;
+    const bar=t=>{const a=avail(t);const cls=a===0?'empty':a<=2?'warn':'ok';return `<div class="lb ${cls}"><div class="l-val">${emp.leaves[t].used}/${emp.leaves[t].total}</div><div class="l-avail">${a} left</div></div>`;};
+    const total=emp.leaves.EL.used+emp.leaves.CL.used+emp.leaves.SL.used+emp.leaves.PH.taken;
+    const dc=deptColors[emp.dept]||'#888';
+    return `<tr><td><span class="eid-chip">${emp.eid}</span></td><td><strong>${emp.name}</strong>${emp.critical?' <span style="font-size:10px;color:var(--red);">⚑</span>':''}</td><td style="font-size:12px;">${emp.role}</td><td><span class="dept-chip" style="background:${dc}22;color:${dc};">${emp.dept}</span></td><td>${bar('EL')}</td><td>${bar('CL')}</td><td>${bar('SL')}</td><td style="text-align:center;font-weight:700;">${emp.leaves.PH.taken}</td><td style="text-align:center;font-weight:700;color:var(--navy);">${total}</td></tr>`;
+  }).join('');
+}
+
+function addAudit(id,eid,name,type,days,path,checkpoints,actor,decision,notes) {
+  auditLog.unshift({ts:ts(),id,eid,name,type,days,path,checkpoints,actor,decision,notes});
+  updateCounts();
+}
+
+function renderAudit() {
+  const actorCls={AI_Engine:'ai','HR Manager':'hr',System:'sys'};
+  const decCls={approved:'approved',rejected:'rejected',pending:'pending','auto-approved':'auto',flagged:'flagged'};
+  document.getElementById('auditBody').innerHTML=auditLog.map(e=>`<tr>
+    <td style="font-size:11px;">${e.ts}</td><td style="font-size:11px;font-weight:700;">${e.id}</td>
+    <td><span class="eid-chip">${e.eid}</span></td><td>${e.name}</td>
+    <td style="font-weight:700;">${e.type}</td><td style="text-align:center;">${e.days}</td>
+    <td style="font-size:11px;">${e.path.toUpperCase()}</td>
+    <td style="font-size:11px;">${e.checkpoints||'—'}</td>
+    <td><span class="audit-actor ${actorCls[e.actor]||'ai'}">${e.actor}</span></td>
+    <td><span class="audit-decision ${decCls[e.decision]||'pending'}">${e.decision.toUpperCase()}</span></td>
+    <td style="font-size:11px;color:var(--dgray);">${e.notes}</td>
+  </tr>`).join('');
+}
+
+function updateCounts() {
+  const pending=leaveRequests.filter(r=>r.status==='pending-review').length;
+  const rc=document.getElementById('reviewCount'); if(rc)rc.textContent=pending;
+  const ac=document.getElementById('auditCount'); if(ac)ac.textContent=auditLog.length;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// CSV EXPORT
+// ═══════════════════════════════════════════════════════════════════════
+function exportLedger() {
+  const rows=[['EID','Name','Role','Dept','EL_Used','EL_Avail','CL_Used','CL_Avail','SL_Used','SL_Avail','PH_Taken']];
+  EMPLOYEES.forEach(e=>{rows.push([e.eid,e.name,e.role,e.dept,e.leaves.EL.used,e.leaves.EL.total-e.leaves.EL.used,e.leaves.CL.used,e.leaves.CL.total-e.leaves.CL.used,e.leaves.SL.used,e.leaves.SL.total-e.leaves.SL.used,e.leaves.PH.taken]);});
+  dlCSV(rows,'ZipBaby_Leave_Ledger.csv');
+}
+function exportAudit() {
+  const rows=[['Timestamp','Request ID','EID','Name','Type','Days','Path','Checkpoints','Actor','Decision','Notes']];
+  auditLog.forEach(e=>rows.push([e.ts,e.id,e.eid,e.name,e.type,e.days,e.path,e.checkpoints,e.actor,e.decision,e.notes]));
+  dlCSV(rows,'ZipBaby_Audit_Log.csv');
+}
+function dlCSV(rows,fname) {
+  const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download=fname; a.click();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// EMPLOYEE LEAVE TYPE PREVIEW
+// ═══════════════════════════════════════════════════════════════════════
+document.addEventListener('change', function(e) {
+  if (e.target.id==='emp-leaveType') updateEmpBalancePreview();
+});
+</script>
+</body>
+</html>
